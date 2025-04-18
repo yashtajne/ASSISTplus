@@ -1,0 +1,15 @@
+
+:root {
+    --primary-color: #6a1b9a; /* Rich purple */
+    --secondary-color: #00bcd4; /* Vibrant cyan */
+    --accent-color: #ffc107; /* Warm amber for highlights */
+    --text-color: #eeeeee; /* Light grey for readability */
+    --font-size-large: 18px; /* Slightly larger font size */
+
+    --background-color1: #212121; /* Deep grey for dark themes */
+    --background-color2: #454545; /* Deep grey for dark themes */
+    --background-color3: #313131; /* Deep grey for dark themes */
+    --background-color4: #a8a8a8; /* Deep grey for dark themes */
+
+    --danger-color: #f44336;
+}
