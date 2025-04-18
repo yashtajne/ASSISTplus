@@ -130,7 +130,19 @@ export default function App() {
       
       for await (const chunk of response) {
         const words = chunk.text.split(/(\s+)/);
-        for (const word of words) {
+        for (let word of words) {
+          const urlMatch = word.match(/@\[openTab\]\((https?:\/\/[^\s)]+)\)/);
+          if (urlMatch) {
+            const url = urlMatch[1];
+            chrome.windows.create({
+              url: url,
+              type: 'popup',
+              width: 400,
+              height: 300
+            });
+            word = word.replace(/@\[openTab\]\([^\)]+\)\s*/, '');
+          }
+          
           fullResponse += word;
           await new Promise(resolve => setTimeout(resolve, 1));
           setMessages(prev => {
