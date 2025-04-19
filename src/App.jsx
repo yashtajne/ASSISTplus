@@ -1,46 +1,30 @@
 import { useRef, useState, useEffect } from "react";
-import { IoSettingsSharp, IoTrash, IoLogoGoogle, IoLogoDiscord, IoDownload, IoShare, IoExit, IoMailUnread } from "react-icons/io5";
-import { GoogleGenAI, Type } from "@google/genai";
-import ReactMarkdown from "react-markdown"
+import { 
+  IoSettingsSharp, 
+  IoTrash, 
+  IoLogoGoogle, 
+  IoLogoDiscord, 
+  IoDownload, 
+  IoShare, 
+  IoExit, 
+  IoMailUnread,
+} from "react-icons/io5";
+import ReactMarkdown from "react-markdown";
+import { ai, modelOptions } from "../lib/ai";
+
 import ActionBar from "./components/ActionBar";
 import Modal from "./components/Modal";
 import DefaultPfp from "./assets/guest.png";
 import Dropdown from './components/Dropdown';
-import FirebaseAppClient from '../lib/firebase';
-import { getAuth, GoogleAuthProvider, signInWithPopup, browserLocalPersistence, setPersistence } from "firebase/auth";
+
 import "./assets/Colors.css";
 import "./App.css";
 
-const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GENAI_APIKEY })
-
-const modelOptions = [
-  {
-    value: 'gemini-1.5-flash',
-    label: 'Gemini 1.5 Flash',
-    about: 'Gemini 1.5 Flash is a fast and versatile multimodal model for scaling across diverse tasks.'
-  },
-  {
-    value: 'gemini-1.5-flash-8b',
-    label: 'Gemini 1.5 Flash 8B',
-    about: 'Gemini 1.5 Flash-8B is a small model designed for lower intelligence tasks.'
-  },
-  {
-    value: 'gemini-2.0-flash',
-    label: 'Gemini 2.0 Flash',
-    about: 'Gemini 2.0 Flash delivers next-gen features and improved capabilities, including superior speed, native tool use, multimodal generation, and a 1M token context window.'
-  },
-  {
-    value: 'gemini-2.0-flash-lite',
-    label: 'Gemini 2.0 Flash Lite',
-    about: 'A Gemini 2.0 Flash model optimized for cost efficiency and low latency.'
-  },
-];
 
 export default function App() {
 
   const [isSettingsPageOpened, setSettingsPageOpened] = useState(false);
-
-  const [selectedModel, setSelectedModel] = useState(modelOptions[0]);
+  const [selectedModel, setSelectedModel] = useState(modelOptions[modelOptions.length - 1]);
 
   const [messages, setMessages] = useState(() => {
     const saved = localStorage.getItem('chatMessages');
@@ -58,6 +42,9 @@ export default function App() {
 
   useEffect(() => {
     localStorage.setItem('chatMessages', JSON.stringify(messages));
+    if (chatViewRef.current) {
+      chatViewRef.current.scrollTop = chatViewRef.current.scrollHeight;
+    }
   }, [messages]);
 
   useEffect(() => {
@@ -79,21 +66,6 @@ export default function App() {
     }
     return () => clearInterval(timer);
   }, [requestCount, lastRequestTime]);
-
-  useEffect(() => {
-    const auth = getAuth(FirebaseAppClient);
-    setPersistence(auth, browserLocalPersistence);
-    
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (user) {
-        setUser(user);
-      } else {
-        setUser(null);
-      }
-    });
-
-    return () => unsubscribe();
-  }, []);
 
   const handleSend = async (msg) => {
     if (msg.trim() === '') return;
@@ -164,38 +136,6 @@ export default function App() {
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    try {
-      const auth = getAuth(FirebaseAppClient);
-      const provider = new GoogleAuthProvider();
-      
-      provider.setCustomParameters({
-        prompt: 'select_account'
-      });
-      
-      provider.addScope('https://www.googleapis.com/auth/userinfo.profile');
-      provider.addScope('https://www.googleapis.com/auth/userinfo.email');
-      
-      const result = await signInWithPopup(auth, provider);
-      setUser(result.user);
-      setSettingsPageOpened(false);
-
-    } catch (error) {
-      console.error("Error signing in with Google:", error);
-    }
-  };
-
-  const handleSignOut = async () => {
-    try {
-      if (!window.confirm("Are you sure you want to Sign-out?")) return;
-      const auth = getAuth(FirebaseAppClient);
-      await auth.signOut();
-      setUser(null);
-    } catch (error) {
-      console.error("Error signing out:", error);
-    }
-  };
-
   const clearChat = () => {
     if (window.confirm("Are you sure you want to delete all messages?")) {
       setMessages([]);
@@ -226,12 +166,6 @@ export default function App() {
       alert("Failed to export chat");
     }
   };
-
-  useEffect(() => {
-    if (chatViewRef.current) {
-      chatViewRef.current.scrollTop = chatViewRef.current.scrollHeight;
-    }
-  }, [messages]);
 
   return (
     <div style={{ 
@@ -378,7 +312,7 @@ export default function App() {
                   alignItems: 'center',
                 }}>
                   <img 
-                    src={user ? user.photoURL : DefaultPfp} 
+                    src={user ? user.picture : DefaultPfp} 
                     alt={user ? "User Profile" : "Guest Profile"} 
                     style={{
                       borderRadius: '50px',
@@ -397,7 +331,9 @@ export default function App() {
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
                       display: 'block',
-                    }}>{user ? user.displayName : "Guest User"}</span>
+                      fontSize: '15px',
+                      fontWeight: '600'
+                    }}>{user ? user.name : "Guest User"}</span>
                     <span style={{
                       width: '90%',
                       whiteSpace: 'nowrap',
@@ -413,14 +349,36 @@ export default function App() {
                       {user ? (
                         <button 
                           className="log-in-button"
-                          onClick={handleSignOut}
+                          onClick={() => {
+                              console.log("Signing out")
+                              chrome.runtime.sendMessage(
+                                { type: 'logout', token: localStorage.getItem('authToken') },
+                                (res) => {
+                                  console.log("Logout response:", res);
+                                  if (res?.success) {
+                                    setUser(null);
+                                    localStorage.removeItem('authToken');
+                                  } else {
+                                    console.error("Logout failed", res);
+                                  }
+                                }
+                              );                              
+                          }}
                         >
                           Sign Out <IoExit size={18} />
                         </button>
                       ) : (
                         <button 
                           className="log-in-button" 
-                          onClick={handleGoogleSignIn}
+                          onClick={() => {
+                            console.log("Signing in")
+                            chrome.runtime.sendMessage({ type: 'login' }, (res) => {
+                              if (res.success) {
+                                setUser(res.user);
+                                localStorage.setItem('authToken', res.token);
+                              }
+                            });
+                          }}
                         >
                           <IoLogoGoogle /> Sign in with Google
                         </button>
@@ -433,7 +391,15 @@ export default function App() {
                 width: '40%',
                 borderRadius: '20px',
                 padding: '0px 0px 10px 20px',
-                backgroundColor: 'var(--background-color2)'
+                backgroundColor: 'var(--background-color2)',
+                cursor: 'pointer',
+              }} onClick={() => {
+                chrome.windows.create({
+                  url: "local.html",
+                  type: 'panel',
+                  width: 400,
+                  height: 300
+                });
               }}>
                 <h4 style={{ margin: '15px 0' }}>Tier</h4>
                 <div style={{

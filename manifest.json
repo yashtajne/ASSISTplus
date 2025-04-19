@@ -1,27 +1,32 @@
 {
     "manifest_version": 3,
-    "name": "ASSIST++",
+    "name": "ASSIST+",
     "version": "1.0.0",
     "description": "AI Browser Assistance!",
     "action": {
         "default_popup": "index.html"
     },
-    "permissions": [
-        "identity",
-        "storage",
-        "tabs"
-    ],
-    "content_security_policy": {
-        "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' https://generativelanguage.googleapis.com https://www.googleapis.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com https://*.firebaseio.com"
+    "background": {
+        "service_worker": "worker.js"
     },
-    "host_permissions": [
-        "https://generativelanguage.googleapis.com/",
-        "https://www.googleapis.com/",
-        "https://securetoken.googleapis.com/",
-        "https://identitytoolkit.googleapis.com/"
+    "permissions": [
+        "storage",
+        "tabs",
+        "identity"
     ],
+    "web_accessible_resources": [{
+        "resources": [
+            "assets/*",
+            "pricing.html",
+            "*.js"
+        ],
+        "matches": ["https://*/*"]
+    }],
+    "content_security_policy": {
+        "extension_pages": "script-src 'self'; object-src 'self';"
+    },
     "oauth2": {
-        "client_id": "408490136295-etct68ku8g44tsqqoe8pc11a0ubt0tin.apps.googleusercontent.com",
+        "client_id": "104106488496-44dsa0rnp8mtdsqp58omeuluip0du9bk.apps.googleusercontent.com",
         "scopes": [
             "https://www.googleapis.com/auth/userinfo.email",
             "https://www.googleapis.com/auth/userinfo.profile"
