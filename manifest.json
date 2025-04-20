@@ -2,28 +2,35 @@
     "manifest_version": 3,
     "name": "ASSIST+",
     "version": "1.0.0",
-    "description": "AI Browser Assistance!",
+    "description": "AI Browser Assistant!",
+    "background": {
+        "service_worker": "worker.js",
+        "type": "module"
+    },
     "action": {
         "default_popup": "index.html"
-    },
-    "background": {
-        "service_worker": "worker.js"
     },
     "permissions": [
         "storage",
         "tabs",
         "identity"
     ],
-    "web_accessible_resources": [{
-        "resources": [
-            "assets/*",
-            "pricing.html",
-            "*.js"
-        ],
-        "matches": ["https://*/*"]
-    }],
+    "host_permissions": [
+        "http://*/*",
+        "https://*/*"
+    ],
+   "web_accessible_resources": [
+        {
+            "resources": [
+                "page.html",
+                "assets/*",
+                "*.js"
+            ],
+            "matches": ["<all_urls>"]
+        }
+    ],
     "content_security_policy": {
-        "extension_pages": "script-src 'self'; object-src 'self';"
+        "extension_pages": "script-src 'self'; object-src 'self'; img-src * data:;"
     },
     "oauth2": {
         "client_id": "104106488496-44dsa0rnp8mtdsqp58omeuluip0du9bk.apps.googleusercontent.com",

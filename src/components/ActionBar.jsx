@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { FaMicrophone, FaArrowUp, FaPaperclip, FaChevronUp, FaChevronDown } from 'react-icons/fa';
 import "../assets/Colors.css";
 
-export default function ActionBar({ onSend }) {
+export default function ActionBar({ onSend, sendDisabled }) {
 
     const [message, setMessage] = useState('');
     const [isExpanded, setExpanded] = useState(false);
@@ -95,7 +95,7 @@ export default function ActionBar({ onSend }) {
                 }} onClick={() => setExpanded(!isExpanded)}>
                     {isExpanded ? <FaChevronDown /> : <FaChevronUp />}
                 </button>
-                <button style={{
+                <button disabled={sendDisabled} style={{
                     outline: 'none',
                     padding: '8px 12px',
                     borderRadius: '24px',
